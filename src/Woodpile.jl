@@ -181,31 +181,30 @@ symmetrize(ops::AbstractVector{SymOperation{3}}, c::Cylinder; kwargs...) = symme
 
 function __init__()
     @require GLMakie="e9467ef8-e4e7-5192-8a1a-b1aee30e663a" begin
-        @eval using GeometryBasics: Rect, Vec, Mesh
-        @eval using Meshing
-        @eval import GLMakie: plot
+        @eval import .GLMakie
+        @eval import .GLMakie: plot, Figure, Axis3
+
+        @eval import GeometryBasics
+        const GB = GeometryBasics
+        @eval import Meshing: MarchingCubes
+
         function plot(cs::AbstractVector{Cylinder}; style::Symbol=:merged)
-            style = :merged
-            
             f = Figure()
-            ax = Axis3(f; aspect=:data, limits=(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5))
+            Axis3(f[1,1]; aspect=:data, limits=(-0.5, 0.5, -0.5, 0.5, -0.5, 0.5))
             
-            plotstyle = :merged # :merged or :individual
+            mesh_args = (GB.Rect(GB.Vec(-.5,-.5,-.5), GB.Vec(1,1,1)), MarchingCubes(iso=0))
+            mesh_opts = (; samples=(50,50,50))
+            plot_opts = (; colormap=:hot, shading=true)
+
             if style == :individual
-                surfs = Mesh.(Base.Fix2.(Ref(signed_distance), cs),
-                            Ref(Rect(Vec(-.5,-.5,-.5), Vec(1,1,1))),
-                            Ref(MarchingCubes(iso=0)), samples=(50,50,50))
-                foreach(surfs) do surf
-                    GLMakie.mesh!(surf, colormap=:hot, shading=true)
+                foreach(cs) do c
+                    m = GB.Mesh(Base.Fix2(signed_distance, c), mesh_args...; mesh_opts...)
+                    GLMakie.mesh!(m; plot_opts...)
                 end
-            
             elseif style == :merged
-                surf = Mesh(Base.Fix2(signed_distance, cs),
-                            Rect(Vec(-.5,-.5,-.5), Vec(1,1,1)),
-                            MarchingCubes(iso=0), samples=(50,50,50))
-                GLMakie.mesh!(surf, colormap=:hot, shading=true)
+                m = GB.Mesh(Base.Fix2(signed_distance, cs), mesh_args...; mesh_opts...)
+                GLMakie.mesh!(m; plot_opts...)
             end
-            xlims!(ax, (-0.5,0.5)); ylims!(ax, (-0.5,0.5)); zlims!(ax, (-0.5,0.5))
 
             return f
         end
