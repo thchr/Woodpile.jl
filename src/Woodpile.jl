@@ -10,42 +10,42 @@ import Base: minimum, maximum, *, ==, isapprox
 
 # ---------------------------------------------------------------------------------------- #
 
-export Cylinder, Ray, Box, Sphere
+export Cylinder, Line, Box, Sphere
 export center, axis, radius
 export symmetrize
 
 # ---------------------------------------------------------------------------------------- #
 
-struct Ray
+struct Line
     cntr::SVector{3,Float64}
     axis::SVector{3,Float64}
-    function Ray(cntr::SVector{3,Float64}, axis::SVector{3,Float64})
+    function Line(cntr::SVector{3,Float64}, axis::SVector{3,Float64})
         l = norm(axis)
-        iszero(l) && error("Ray axis cannot be a zero vector")
+        iszero(l) && error("Line axis cannot be a zero vector")
         new(cntr, isone(l) ? axis : axis./l)
     end
 end
-Ray(cntr, axis) = Ray(convert(SVector{3,Float64}, cntr), convert(SVector{3,Float64}, axis))
-center(r::Ray) = r.cntr
-axis(r::Ray) = r.axis
-# Rodrigues' rotation formula (rotate a ray around a unit vector n by an angle θ)
-function rotate(r::Ray, n::StaticVector{3}, θ::Real)
+Line(cntr, axis) = Line(convert(SVector{3,Float64}, cntr), convert(SVector{3,Float64}, axis))
+center(l::Line) = l.cntr
+axis(l::Line) = l.axis
+# Rodrigues' rotation formula (rotate a line around a unit vector n by an angle θ)
+function rotate(l::Line, n::StaticVector{3}, θ::Real)
     s, c = sincos(θ)
-    cntr′::SVector{3,Float64} = c*r.cntr + s*(n×r.cntr) + (1-c)*(n⋅r.cntr)*n
-    axis′::SVector{3,Float64} = c*r.axis + s*(n×r.axis) + (1-c)*(n⋅r.axis)*n
-    return Ray(cntr′, axis′)
+    cntr′::SVector{3,Float64} = c*center(l) + s*(n×center(l)) + (1-c)*(n⋅center(l)) * n
+    axis′::SVector{3,Float64} = c*axis(l) + s*(n×axis(l)) + (1-c)*(n⋅axis(l)) * n
+    return Line(cntr′, axis′)
 end
 
 struct Cylinder
-    ray::Ray
+    line::Line
     radius::Float64
 end
-Cylinder(cntr::AbstractVector{<:Real}, axis::AbstractVector{<:Real}, radius::Real) = Cylinder(Ray(cntr, axis), radius)
-ray(c::Cylinder)    = c.ray
-center(c::Cylinder) = center(ray(c))
-axis(c::Cylinder)   = axis(ray(c))
+Cylinder(cntr::AbstractVector{<:Real}, axis::AbstractVector{<:Real}, radius::Real) = Cylinder(Line(cntr, axis), radius)
+line(c::Cylinder)    = c.line
+center(c::Cylinder) = center(line(c))
+axis(c::Cylinder)   = axis(line(c))
 radius(c::Cylinder) = c.radius
-rotate(c::Cylinder, n::StaticVector{3}, θ::Real) = Cylinder(rotate(ray(c), n, θ), radius(c))
+rotate(c::Cylinder, n::StaticVector{3}, θ::Real) = Cylinder(rotate(line(c), n, θ), radius(c))
 
 struct Box
     # axis aligned box
@@ -84,7 +84,7 @@ function (*)(op::SymOperation{3}, c::Cylinder)
     cntr′ = rotation(op)*center(c) + translation(op)
     axis′ = rotation(op)*axis(c)
     axis′ = normalize(axis′)
-    return Cylinder(Ray(cntr′, axis′), radius(c))
+    return Cylinder(Line(cntr′, axis′), radius(c))
 end
 function (==)(c1::Cylinder, c2::Cylinder)
     # two cylinders' axes are the same if they are colinear
@@ -101,7 +101,7 @@ function isapprox(c1::Cylinder, c2::Cylinder;
     norm((center(c1) - center(c2)) × axis(c1)) ≤ atol || return false  
     return isapprox(radius(c1), radius(c2); atol=atol, rtol=rtol)
 end
-Base.:+(c::Cylinder, v::StaticVector{3}) = Cylinder(Ray(center(c)+v, axis(c)), radius(c))
+Base.:+(c::Cylinder, v::StaticVector{3}) = Cylinder(Line(center(c)+v, axis(c)), radius(c))
 
 # ---------------------------------------------------------------------------------------- #
 
@@ -144,36 +144,36 @@ end
 
 # ---------------------------------------------------------------------------------------- #
 
-struct RayBoxIntersection
+struct LineBoxIntersection
     bool::Bool
     tmin::Float64
     tmax::Float64
 end
-Base.Bool(i::RayBoxIntersection) = i.bool
+Base.Bool(i::LineBoxIntersection) = i.bool
 
-function intersects(b::Box, r::Ray)
-    # branchless ray-box intersection following https://tavianator.com/2011/ray_box.html
+function intersects(b::Box, l::Line)
+    # branchless line-box intersection following https://tavianator.com/2011/ray_box.html
     b_min, b_max = minimum(b), maximum(b)
-    r_cntr = center(r)
-    r_axis = axis(r)
-    inv_r_axis = 1 ./ r_axis
+    l_cntr = center(l)
+    l_axis = axis(l)
+    inv_r_axis = 1 ./ l_axis
 
-    tx1 = (b_min[1] - r_cntr[1]) * inv_r_axis[1]
-    tx2 = (b_max[1] - r_cntr[1]) * inv_r_axis[1]
+    tx1 = (b_min[1] - l_cntr[1]) * inv_r_axis[1]
+    tx2 = (b_max[1] - l_cntr[1]) * inv_r_axis[1]
     tmin = min(tx1, tx2)
     tmax = max(tx1, tx2)
 
-    ty1 = (b_min[2] - r_cntr[2]) * inv_r_axis[2]
-    ty2 = (b_max[2] - r_cntr[2]) * inv_r_axis[2]
+    ty1 = (b_min[2] - l_cntr[2]) * inv_r_axis[2]
+    ty2 = (b_max[2] - l_cntr[2]) * inv_r_axis[2]
     tmin = max(tmin, min(ty1, ty2))
     tmax = min(tmax, max(ty1, ty2))
     
-    tz1 = (b_min[3] - r_cntr[3]) * inv_r_axis[3]
-    tz2 = (b_max[3] - r_cntr[3]) * inv_r_axis[3]   
+    tz1 = (b_min[3] - l_cntr[3]) * inv_r_axis[3]
+    tz2 = (b_max[3] - l_cntr[3]) * inv_r_axis[3]   
     tmin = max(tmin, min(tz1, tz2))
     tmax = min(tmax, max(tz1, tz2))
 
-    return RayBoxIntersection(tmax ≥ tmin, tmin, tmax)
+    return LineBoxIntersection(tmax ≥ tmin, tmin, tmax)
 end
 function might_intersects(b::Box, c::Cylinder)
     # poor man's intersection check: if a cylinder's center doesn't penetrate the faces
@@ -182,7 +182,7 @@ function might_intersects(b::Box, c::Cylinder)
     # to do better than this, we should check if the cylinder itself ever intersects with
     # the edge-segments of the box (but that is tedious... so we just make do with this)
     b′ = Box(center(b), width(b) .+ radius(c)*2)
-    return intersects(b′, ray(c))
+    return intersects(b′, line(c))
 end
 might_intersects(c::Cylinder, b::Box=Box()) = might_intersects(b, c)
 

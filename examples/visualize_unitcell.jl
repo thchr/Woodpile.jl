@@ -1,4 +1,4 @@
-using Woodpile: Cylinder, Ray, symmetrize
+using Woodpile: Cylinder, Line, symmetrize
 using Crystalline
 using StaticArrays
 
@@ -42,7 +42,7 @@ elseif sgnum == 222
 else
     error(DomainError(sgnum, "no default seed choices for `sgnum`; add your own"))
 end
-seed = Cylinder(Ray(cntr, axis), rad)
+seed = Cylinder(Line(cntr, axis), rad)
 
 # ---------------------------------------------------------------------------------------- #
 # generate a symmetric woodpile structure based on `seed` and visualize it
