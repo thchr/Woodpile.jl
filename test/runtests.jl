@@ -2,5 +2,5 @@ using Woodpile
 using Test
 
 @testset "Woodpile.jl" begin
-    # Write your tests here.
+    include("t_cylinder_polygon_intersect.jl")
 end
