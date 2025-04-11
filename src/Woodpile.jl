@@ -1,10 +1,19 @@
 module Woodpile
 
+# ---------------------------------------------------------------------------------------- #
+
 using Crystalline: SymOperation, rotation, translation, isapproxin, @S_str, compose
 using StaticArrays
 using LinearAlgebra
 
-import Base: minimum, maximum, *, ==, isequal, isapprox
+import Base: minimum, maximum, *, ==, isapprox
+
+# ---------------------------------------------------------------------------------------- #
+
+export Cylinder, Ray, Box, Sphere
+export center, axis, radius
+export symmetrize
+
 # ---------------------------------------------------------------------------------------- #
 
 struct Ray
@@ -12,6 +21,7 @@ struct Ray
     axis::SVector{3,Float64}
     function Ray(cntr::SVector{3,Float64}, axis::SVector{3,Float64})
         l = norm(axis)
+        iszero(l) && error("Ray axis cannot be a zero vector")
         new(cntr, isone(l) ? axis : axis./l)
     end
 end
@@ -198,13 +208,13 @@ might_intersects(s::Sphere, b::Box=Box()) = might_intersects(b, s)
 
 # ---------------------------------------------------------------------------------------- #
 const NEIGHBOR_TRANSLATIONS = 
-    tuple([SVector(I[1],I[2],I[3]) for I in vec(CartesianIndices((-1:1, -1:1, -1:1))) if !iszero(I)]...)
+    NTuple{26, SVector{3, Int}}([SVector(I[1],I[2],I[3]) for I in vec(CartesianIndices((-1:1, -1:1, -1:1))) if !iszero(I)])
 
 function symmetrize(ops::AbstractVector{SymOperation{3}},
             cs::Union{AbstractVector{Cylinder}, AbstractVector{Sphere}};
             add_neighbors::Bool=true)
 
-    cs′ = deepcopy(cs)
+    cs′ = copy(cs)
     for op in ops
         for c in cs
             c′ = op * c
@@ -219,7 +229,7 @@ function symmetrize(ops::AbstractVector{SymOperation{3}},
     end
 
     if length(cs′) == length(cs)
-        # no extra cylinders were added, we converged       
+        # no extra objects were added, we converged       
         # however, before returning we do the following check: in case the initial seed
         # point was outside the unit cell, there might be an element in `cs′` that really
         # doesn't intersect the unitcell; no point in keeping it around - filter it out here
