@@ -17,7 +17,7 @@ function plot(
     plot_kwargs...
 )
     f = Figure()
-    ax = Axis3(f[1,1]; aspect=:data, limits=limits)
+    ax = Axis3(f[1,1]; aspect=:data, limits=limits, viewmode=:free)
 
     # 3D unit cell
     r_o = SVector(limits[1], limits[3], limits[5])
