@@ -108,4 +108,3 @@ The docstring of `symmetrize` is copied below:
 > The number of samples used to resolve the cylinder isosurfaces can be controlled using
 > the keyword `samples` in the `plot` function. Similarly, the isosurfaces can be plotted
 > as `:merged` or `:individual` (default: `:merged`) via the `style` keyword argument.
-> """
