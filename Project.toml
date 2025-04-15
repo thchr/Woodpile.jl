@@ -4,6 +4,8 @@ authors = ["Thomas Christensen <tchr@mit.edu> and contributors"]
 version = "0.1.2"
 
 [deps]
+Bravais = "ada6cbde-b013-4edf-aa94-f6abe8bd6e6b"
+Brillouin = "23470ee3-d0df-4052-8b1a-8cbd6363e7f0"
 Crystalline = "ae5e2be0-a263-11e9-351e-f94dad1eb351"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Meshing = "e6723b4c-ebff-59f1-b4b7-d97aa5274f73"
@@ -16,6 +18,9 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 WoodpileMakieExt = ["Makie"]
 
 [compat]
+Bravais = "0.2.4"
+Brillouin = "0.5.21"
+Crystalline = "0.6.14"
 Makie = "0.22"
 Meshing = "0.7"
 StaticArrays = "1.9"
