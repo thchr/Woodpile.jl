@@ -1,6 +1,6 @@
-# Woodpile
+# Woodpile.jl
 
-Tools to generate arbitrary woodpile-like structures with space group symmetry.
+Julia package to generate arbitrary woodpile-like structures with space group symmetry.
 
 The functionality is provided via `symmetrize` (see `help> symmetrize`), which "symmetrizes" (i.e., adds symmetrically related) `Cylinder` objects over a set of symmetry operations, retaining cylinders that are inequivalent and inside the unit cell.
 
