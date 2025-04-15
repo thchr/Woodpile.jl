@@ -14,7 +14,7 @@ if sgnum == 218
     # TODO: The center/axis choice is not good: produces equivalent symmetry to SG 223.
     rad = .25
     cntr = [0, 0, 0.5] # a (non-canonical) 6b Wyckoff position
-    axis = [1, 0, 0] # [1,0,0] is not good; leads to sg 223 symmetry
+    axis = [0,0,1]
 elseif sgnum == 223
     rad = .2
     cntr = [0, 0, .5] # 2a Wyckoff position
@@ -48,5 +48,6 @@ seed = Cylinder(Line(cntr, axis), rad)
 # generate a symmetric woodpile structure based on `seed` and visualize it
 using GLMakie
 
-cs = symmetrize(sg, seed)
-plot(cs, boxtol=1e-8)
+Rs = directbasis(sgnum, Val(3))
+cs = symmetrize(sg, seed, Rs)
+plot(cs, Rs)
