@@ -22,7 +22,7 @@ The docstring of `symmetrize` is copied below:
 >         boundary::Union{DirectBasis{3}, Cell{3}};
 >         add_neighbors::Bool=true,
 >         cartesian_ops::Bool=false) 
->     --> cs′ :: AbstractVector{<:Union{Cylinder, Sphere}}
+>     --> cs′ :: Vector{Cylinder}
 > ```
 > Given a list of symmetry operations `ops` and a cylinder (or list of cylinders) `cs`, apply
 > every operation in `ops` to `cs` and aggregate the resulting distinct cylinders that
