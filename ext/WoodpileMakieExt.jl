@@ -91,11 +91,10 @@ function plot!(
         end
         lines!(ax, segments; color=:black, linewidth=0.5)
 
-        xlims!(ax, minimum(f->minimum(r->r[1], f), fs), maximum(f->maximum(r->r[1], f), fs))
-        ylims!(ax, minimum(f->minimum(r->r[2], f), fs), maximum(f->maximum(r->r[2], f), fs))
-        zlims!(ax, minimum(f->minimum(r->r[3], f), fs), maximum(f->maximum(r->r[3], f), fs))
+        grow_limits!(ax, ntuple(i -> (minimum(f->minimum(r->r[i], f), fs),
+                                      maximum(f->maximum(r->r[i], f), fs)), Val(3))...)
     else
-        xlims!(ax, -0.5, 0.5); ylims!(ax, -0.5, 0.5); zlims!(ax, -0.5, 0.5)
+        grow_limits!(ax, (-0.5, 0.5), (-0.5, 0.5), (-0.5, 0.5))
     end
 
     # show primitives, cropped to 3D unit cell bounding box
@@ -179,7 +178,7 @@ function plot!(
     # 3D unit cell
     xmin, xmax, ymin, ymax, zmin, zmax = unitcell_bounding_box(uc)
     plot!(ax, uc)
-    xlims!(ax, xmin, xmax); ylims!(ax, ymin, ymax); zlims!(ax, zmin, zmax)
+    grow_limits!(ax, (xmin, xmax), (ymin, ymax), (zmin, zmax))
 
     # show primitives, cropped to 3D unit cell bounding box
     plot_opts = merge((; color=:gray, transparency=false), plot_kws)
@@ -244,6 +243,19 @@ function unitcell_bounding_box(uc::Cell{3})
 
     return (xmin, xmax, ymin, ymax, zmin, zmax)
 end
+
+# ---------------------------------------------------------------------------------------- #
+
+# grow the axis limits to cover `xlims`, `ylims` and `zlims` rather than overwriting them,
+# so that structures drawn in different unit cells are not clipped when overlaid via `plot!`
+function grow_limits!(ax::Axis3, xlims, ylims, zlims)
+    lims = map(_grow_lims, ax.limits[], (xlims, ylims, zlims))
+    xlims!(ax, lims[1]...); ylims!(ax, lims[2]...); zlims!(ax, lims[3]...)
+    return ax
+end
+_grow_lims(old::Tuple{<:Real, <:Real}, new::Tuple{<:Real, <:Real}) =
+    (min(old[1], new[1]), max(old[2], new[2]))
+_grow_lims(_, new::Tuple{<:Real, <:Real}) = new # no (complete) limits set along this axis
 
 # ---------------------------------------------------------------------------------------- #
 

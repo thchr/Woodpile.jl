@@ -73,6 +73,13 @@ end
     @test p isa Makie.Plot
     @test length(fap.axis.scene.plots) > n₀ # the second structure was added to the same axis
 
+    # ... and the axis limits grow to cover both, rather than being overwritten by the last
+    # boundary plotted (which would clip the first if it were the smaller cell)
+    Rs_big = DirectBasis{3}([2.0,0.0,0.0], [0.0,2.0,0.0], [0.0,0.0,2.0])
+    fap = Makie.plot(ss′, Rs_big; samples=20) # cell spanning [-1, 1]³
+    Makie.plot!(ss′, Rs; samples=20)           # cell spanning [-½, ½]³
+    @test all(lim -> lim[1] ≈ -1.0 && lim[2] ≈ 1.0, fap.axis.limits[])
+
     Makie.current_figure!(Makie.Figure()) # a figure with no axis in it
     @test_throws "no current `Axis3`" Makie.plot!(ss′, Rs; samples=20)
 
