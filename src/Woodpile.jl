@@ -156,6 +156,8 @@ function facets(uc :: Cell) # NB: we always return in _cartesian_ coordinates
     vs = Brillouin.vertices(uc)
     vs = if Brillouin.setting(uc) == Brillouin.LATTICE
         cartesianize.(vs, Ref(Brillouin.basis(uc))) # non-mutating, intentionally
+    else
+        vs
     end
     return [vs[f] for f in Brillouin.faces(uc)]
 end
