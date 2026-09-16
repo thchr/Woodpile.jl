@@ -3,7 +3,7 @@ module Woodpile
 # ---------------------------------------------------------------------------------------- #
 
 using Crystalline: SymOperation, rotation, translation, isapproxin, @S_str, compose
-using Bravais: DirectBasis, cartesianize, transform, latticize
+using Bravais: DirectBasis, cartesianize, latticize
 using Brillouin: Cell, Brillouin, setting
 
 using StaticArrays: SVector, StaticVector
@@ -33,8 +33,12 @@ end
 Line(cntr, axis) = Line(convert(SVector{3,Float64}, cntr), convert(SVector{3,Float64}, axis))
 center(l::Line)  = l.cntr
 axis(l::Line)    = l.axis
-cartesianize(l::Line, basis::DirectBasis{3}) = Line(center(l)'*basis, axis(l)'*basis)
-latticize(l::Line, basis::DirectBasis{3})    = Line(center(l)\basis,  axis(l)\basis)
+function cartesianize(l::Line, basis::DirectBasis{3})
+    return Line(cartesianize(center(l), basis), cartesianize(axis(l), basis))
+end
+function latticize(l::Line, basis::DirectBasis{3})
+    return Line(latticize(center(l), basis), latticize(axis(l), basis))
+end
 function rotate(l::Line, n::StaticVector{3}, θ::Real)
     # Rodrigues' rotation formula (rotate a line around a unit vector n by an angle θ)
     s, c = sincos(θ)
@@ -54,8 +58,10 @@ line(c::Cylinder)   = c.line
 center(c::Cylinder) = center(line(c))
 axis(c::Cylinder)   = axis(line(c))
 radius(c::Cylinder) = c.radius
-cartesianize(c::Cylinder, basis::DirectBasis{3}) = Cylinder(transform(line(c), basis), radius(c))
-latticize(c::Cylinder, basis::DirectBasis{3})    = Cylinder(transform(line(c), basis), radius(c))
+# NB: `cartesianize` and `latticize` convert the center & axis only: `radius` is a length,
+#     and is left untouched (a cylinder or sphere is generally not one in the other basis)
+cartesianize(c::Cylinder, basis::DirectBasis{3}) = Cylinder(cartesianize(line(c), basis), radius(c))
+latticize(c::Cylinder, basis::DirectBasis{3})    = Cylinder(latticize(line(c), basis), radius(c))
 rotate(c::Cylinder, n::StaticVector{3}, θ::Real) = Cylinder(rotate(line(c), n, θ), radius(c))
 
 # ---------------------------------------------------------------------------------------- #
@@ -66,6 +72,8 @@ struct Sphere
 end
 center(s::Sphere) = s.cntr
 radius(s::Sphere) = s.radius
+cartesianize(s::Sphere, basis::DirectBasis{3}) = Sphere(cartesianize(center(s), basis), radius(s))
+latticize(s::Sphere, basis::DirectBasis{3})    = Sphere(latticize(center(s), basis), radius(s))
 
 # ---------------------------------------------------------------------------------------- #
 
