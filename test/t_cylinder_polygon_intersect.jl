@@ -1,4 +1,7 @@
 using Woodpile: Cylinder, intersects
+using StaticArrays: SVector
+
+
 
 @testset "cylinder-polygon intersection" begin
 
@@ -11,7 +14,7 @@ using Woodpile: Cylinder, intersects
     @test intersects(c12, poly2) == true
 
     c3 = Cylinder([1.2, 0, 0], [0,0,1], 0.5) # axis along z, at x-height 1.2, radius 0.5
-    square = SVector{3, Float64}[ # square at xy-plane, centered at origo
+    square = SVector{3, Float64}[ # side-2 square in the xy-plane, centered at origo
         [-1.0, -1.0, 0.0], [1.0, -1.0, 0.0], [1.0, 1.0, 0.0], [-1.0, 1.0, 0.0]]
     @test intersects(c3, square) == true # (proximity check)
 

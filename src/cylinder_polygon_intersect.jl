@@ -137,3 +137,13 @@ function intersects(
         end
     end
 end
+
+## --------------------------------------------------------------------------------------- #
+
+function intersects_cell(
+    c::Cylinder,
+    fs::AbstractVector{<:AbstractVector{<:StaticVector{3,Float64}}};
+    atol::Float64 = INTERSECTION_DEFAULT_ATOL
+)
+    return any(f -> intersects(c, f; atol), fs)
+end

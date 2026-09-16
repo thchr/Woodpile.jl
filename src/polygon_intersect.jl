@@ -1,4 +1,5 @@
-# geometric utilities shared by the primitive-polygon intersection tooling
+# utilities shared by the cylinder- and sphere-polygon intersection tooling in
+# `cylinder_polygon_intersect.jl` and `sphere_polygon_intersect.jl`
 
 using StaticArrays, LinearAlgebra
 
@@ -73,3 +74,44 @@ function _is_planar(
     end
     return true
 end
+
+## --------------------------------------------------------------------------------------- #
+
+"""
+    is_inside_cell(p::StaticVector{3,<:Real},
+                   fs::AbstractVector{<:AbstractVector{<:StaticVector{3,<:Real}}};
+                   atol::Real = INTERSECTION_DEFAULT_ATOL)
+
+Determine if a point `p` lies inside (or on the boundary of) the *convex* polyhedron whose
+facets `fs` are specified by their vertices, ordered such that the associated facet normals
+(cf. `face_normal`) point out of the polyhedron (as returned by `facets`).
+"""
+function is_inside_cell(
+    p::StaticVector{3,<:Real},
+    fs::AbstractVector{<:AbstractVector{<:StaticVector{3,<:Real}}};
+    atol::Real = INTERSECTION_DEFAULT_ATOL
+)
+    for f in fs
+        # `p` is inside iff it is in the negative half-space of every (outward-oriented)
+        # facet plane
+        dot(p - first(f), face_normal(f)) > atol && return false
+    end
+    return true
+end
+
+"""
+    intersects_cell(c::Primitive,
+                    fs::AbstractVector{<:AbstractVector{<:StaticVector{3,<:Real}}};
+                    atol::Real = INTERSECTION_DEFAULT_ATOL)
+
+Determine if a primitive `c` overlaps the *convex* unit cell bounded by the facets `fs`
+(cf. `facets`).
+
+A `Cylinder` is infinitely extended, so it overlaps the cell if and only if it intersects
+one of its facets. A `Sphere`, by contrast, is finite and may lie entirely in the cell
+interior without touching any facet: for spheres, we therefore additionally check whether
+the sphere's center is inside the cell.
+"""
+# NB: the methods of `intersects_cell` are defined per primitive kind, in
+#     `cylinder_polygon_intersect.jl` and `sphere_polygon_intersect.jl`
+function intersects_cell end

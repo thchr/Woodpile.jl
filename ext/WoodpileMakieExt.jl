@@ -11,12 +11,12 @@ using StaticArrays: SVector
 using Brillouin: Brillouin, Cell, basis, in_wignerseitz, setting, vertices
 using Bravais: DirectBasis, cartesianize
 
-using Woodpile: signed_distance, Cylinder, Sphere, facets
+using Woodpile: signed_distance, Primitive, facets
 
 # ---------------------------------------------------------------------------------------- #
 
 function plot(
-    cs::AbstractVector{<:Union{Cylinder, Sphere}},
+    cs::AbstractVector{<:Primitive},
     boundary::Union{AbstractVector{<:AbstractVector{<:Number}}, DirectBasis{3}, Cell{3}, Nothing} = nothing
     ; # keyword arguments
     style::Symbol=:merged,
@@ -37,7 +37,7 @@ end
 
 function plot!(
     ax::Axis3,
-    cs::AbstractVector{<:Union{Cylinder, Sphere}},
+    cs::AbstractVector{<:Primitive},
     boundary::Union{AbstractVector{<:AbstractVector{<:Number}}, DirectBasis{3}, Nothing} = nothing
     ; # keyword arguments
     style::Symbol=:merged,
@@ -70,7 +70,7 @@ function plot!(
         xlims!(ax, -0.5, 0.5); ylims!(ax, -0.5, 0.5); zlims!(ax, -0.5, 0.5)
     end
 
-    # show cylinders / spheres, cropped to 3D unit cell bounding box
+    # show primitives, cropped to 3D unit cell bounding box
     plot_opts = merge((; color=:gray, transparency=false), plot_kws)
 
     samples isa Int && (samples = (samples, samples, samples))
@@ -114,14 +114,14 @@ end
 
 function signed_distance_if_inside(
     x::Real, y::Real, z::Real, 
-    c::Union{Cylinder, AbstractVector{Cylinder}},
+    c::Union{Primitive, AbstractVector{<:Primitive}},
     Rs::DirectBasis{3}
 )
     # NB: we assume `x`, `y`, and `z` to be given in _lattice_ coordinates here, unlike
     #     in the `uc::Cell{3}` method variant below
     inside_box(x, y, z) || return 1e20 # outside box
     rc = cartesianize(SVector(x,y,z), Rs)
-    return signed_distance(rc, c) # inside box: return distance to cylinder(s)
+    return signed_distance(rc, c) # inside box: return distance to primitive(s)
 end
 
 # ---------------------------------------------------------------------------------------- #
@@ -129,7 +129,7 @@ end
 
 function plot!(
     ax::Axis3,
-    cs::AbstractVector{<:Union{Cylinder, Sphere}},
+    cs::AbstractVector{<:Primitive},
     uc::Cell{3}
     ; # keyword arguments
     style::Symbol=:merged,
@@ -145,7 +145,7 @@ function plot!(
     plot!(ax, uc)
     xlims!(ax, xmin, xmax); ylims!(ax, ymin, ymax); zlims!(ax, zmin, zmax)
 
-    # show cylinders / spheres, cropped to 3D unit cell bounding box
+    # show primitives, cropped to 3D unit cell bounding box
     plot_opts = merge((; color=:gray, transparency=false), plot_kws)
 
     samples isa Int && (samples = (samples, samples, samples))
@@ -183,14 +183,14 @@ end
 
 function signed_distance_if_inside(
     x::Real, y::Real, z::Real, 
-    c::Union{Cylinder, AbstractVector{Cylinder}},
+    c::Union{Primitive, AbstractVector{<:Primitive}},
     uc::Cell{3}
 )
     # NB: we assume `x`, `y`, and `z` to be given in _cartesian_ coordinates here, unlike
     #     in the `Rs::DirectBasis{3}` method-variant above
     rᶜ = SVector(x, y, z)
     in_wignerseitz(rᶜ, uc) || return 1e20 # outside wigner-seitz cell
-    return signed_distance(rᶜ, c) # inside wigner-seitz cell: return distance to cylinder(s)
+    return signed_distance(rᶜ, c) # inside wigner-seitz cell: return distance to primitive(s)
 end
 
 function unitcell_bounding_box(uc::Cell{3})
