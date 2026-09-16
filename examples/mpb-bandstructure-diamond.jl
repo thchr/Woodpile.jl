@@ -27,7 +27,7 @@ wps = primitivize.(wps′, cntr)
 
 # NB: `wyckoffs` is ordered by decreasing site symmetry, so `wps[end]` is the 8a position
 #     [1/8,1/8,1/8] (a diamond site); it is invariant under F-centered primitivization
-seed_cntr = cartesianize(wps[end](0,0,0), Rs)
+seed_cntr = cartesianize(wps[end](), Rs)
 
 ## --------------------------------------------------------------------------------------- #
 ## sphere generation

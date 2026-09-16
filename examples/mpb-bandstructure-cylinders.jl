@@ -1,3 +1,8 @@
+# Woodpile-like cylinder structures in cubic space groups (218, 222, 223): a seed cylinder
+# is symmetrized with Woodpile and fed to MPB for a band structure over the irreducible path.
+#
+# Later sections extract symmetry eigenvalues (via MPBUtils) and Berry phases.
+
 using PyCall
 using Brillouin, Crystalline, LinearAlgebra
 using Woodpile: Cylinder, Line, symmetrize
@@ -63,11 +68,15 @@ kvs = interpolate(kp, 35)
 
 # meep geometry
 m = mp.Medium(epsilon=13)
+# NB: MPB takes object coordinates - centers *and* direction vectors - in the (primitive)
+#     lattice basis, whereas Woodpile works in Cartesian coordinates; hence the `latticize`.
+#     Radii are lengths in units of `a`, so they need no conversion.
 geometry = map(cyls) do cyl
     r = cyl.radius
-    c = cyl.line.cntr
-    a = cyl.line.axis
-    mp.Cylinder(center=c, radius=r, material=m, height=mp.inf, axis=mp.Vector3(a...))
+    c = latticize(cyl.line.cntr, Rs)
+    a = latticize(cyl.line.axis, Rs)
+    mp.Cylinder(center=mp.Vector3(c...), radius=r, material=m, height=mp.inf,
+                axis=mp.Vector3(a...))
 end
 
 lattice = mp.Lattice(basis_size=norm.(Rs), # take units relative to conventional unit cell
