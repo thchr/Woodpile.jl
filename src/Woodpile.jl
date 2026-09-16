@@ -133,6 +133,7 @@ end
 
 ## --------------------------------------------------------------------------------------- #
 
+include("polygon_intersect.jl") # utilities shared by the primitive-specific files below
 include("cylinder_polygon_intersect.jl")
 
 # ---------------------------------------------------------------------------------------- #
