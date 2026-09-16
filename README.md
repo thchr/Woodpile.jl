@@ -136,3 +136,11 @@ The docstring of `symmetrize` is copied below:
 > ```jl
 > julia> plot(cs′, Rs; inverted=true)
 > ```
+> 
+> To overlay several structures in one axis - e.g., the same structure in a conventional and
+> a primitive unit cell - use `plot!`, which draws into the current axis:
+> ```jl
+> julia> plot(cs′, Rs; inverted=true, transparency=true)     # conventional cell
+> 
+> julia> plot!(pcs′, pRs; inverted=true, transparency=false) # primitive cell
+> ```

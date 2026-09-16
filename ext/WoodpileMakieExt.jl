@@ -4,7 +4,7 @@ module WoodpileMakieExt
 
 import Makie: plot, plot!
 using Makie: Makie, Figure, Axis3, mesh!, lines!, FigureAxisPlot, GeometryBasics,
-             xlims!, ylims!, zlims!
+             current_axis, xlims!, ylims!, zlims!
 using Meshing: isosurface
 using StaticArrays: SVector
 
@@ -32,6 +32,28 @@ function plot(
               plot_kws...)
 
     return FigureAxisPlot(f, ax, p)
+end
+
+# ---------------------------------------------------------------------------------------- #
+
+"""
+    plot!([ax::Axis3, ] cs::AbstractVector{<:Primitive}, boundary; kws...)
+
+Add the primitives `cs` to an existing 3D axis `ax`, or to the current axis if `ax` is
+omitted, e.g. to overlay structures in different unit cells.
+
+Accepts the same keyword arguments as `plot`.
+"""
+function plot!(
+    cs::AbstractVector{<:Primitive},
+    boundary::Union{AbstractVector{<:AbstractVector{<:Number}}, DirectBasis{3}, Cell{3}, Nothing} = nothing
+    ; # keyword arguments
+    plot_kws...,
+)
+    ax = current_axis()
+    ax isa Axis3 || error("no current `Axis3` to draw into: call `plot` first, or pass an "*
+                          "`Axis3` explicitly as the first argument to `plot!`")
+    return plot!(ax, cs, boundary; plot_kws...)
 end
 
 # ---------------------------------------------------------------------------------------- #

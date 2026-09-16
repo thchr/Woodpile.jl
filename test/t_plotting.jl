@@ -65,6 +65,17 @@ end
             ss′, boundary; samples=10, style=:individual, inverted=true)
     end
 
+    # `plot!` without an explicit axis draws into the current axis, so that structures in
+    # different unit cells (say, a conventional and a primitive cell) can be overlaid
+    fap = Makie.plot(ss′, Rs; samples=20)
+    n₀ = length(fap.axis.scene.plots)
+    p = Makie.plot!(ss′, wignerseitz(Rs); samples=20)
+    @test p isa Makie.Plot
+    @test length(fap.axis.scene.plots) > n₀ # the second structure was added to the same axis
+
+    Makie.current_figure!(Makie.Figure()) # a figure with no axis in it
+    @test_throws "no current `Axis3`" Makie.plot!(ss′, Rs; samples=20)
+
     # a boundary-free plot (uses a unit cube in lattice coordinates)
     fap = Makie.plot(ss′; samples=40)
     @test fap isa FigureAxisPlot
