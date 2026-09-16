@@ -48,6 +48,21 @@ end
         end
 
         @test_throws "unsupported style" Makie.plot(ss′, boundary; samples=10, style=:nope)
+
+        # `inverted=true` meshes the complement: the primitives as holes in a filled cell.
+        # The mesh therefore spans the whole cell, rather than just the spheres' extent
+        fap = Makie.plot(ss′, boundary; samples=40, inverted=true)
+        ex = mesh_extrema(fap.plot)
+        @test ex !== nothing
+        for (lo, hi) in ex
+            @test lo ≤ -0.45 # cf. the [-0.4, 0.4] extent of the un-inverted spheres above
+            @test hi ≥  0.45
+        end
+
+        # the complement of a *single* primitive fills the entire cell, so plotting the
+        # inverted structure primitive-by-primitive is meaningless and is rejected
+        @test_throws "incompatible with `style=:individual`" Makie.plot(
+            ss′, boundary; samples=10, style=:individual, inverted=true)
     end
 
     # a boundary-free plot (uses a unit cube in lattice coordinates)

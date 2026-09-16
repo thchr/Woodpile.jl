@@ -298,6 +298,12 @@ julia> plot(ss′, Rs) # spheres plot the same way
 The number of samples used to resolve the primitives' isosurfaces can be controlled using
 the keyword `samples` in the `plot` function. Similarly, the isosurfaces can be plotted
 as `:merged` or `:individual` (default: `:merged`) via the `style` keyword argument.
+
+Finally, the `inverted` keyword argument (default: `false`) plots the complement of the
+primitives, i.e., the primitives as "holes" in an otherwise filled unit cell:
+```jl
+julia> plot(cs′, Rs; inverted=true)
+```
 """
 function symmetrize(
     ops::AbstractVector{SymOperation{3}},

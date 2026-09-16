@@ -21,13 +21,15 @@ function plot(
     ; # keyword arguments
     style::Symbol=:merged,
     samples::Union{NTuple{3, Int}, Int}=50,
+    inverted::Bool=false,
     axis::NamedTuple=NamedTuple(),
     figure::NamedTuple=NamedTuple(),
     plot_kws...,
 )
     f = Figure(; figure...)
     ax = _default_bare_axis!(f, Val(3); axis=axis)
-    p = plot!(ax, cs, boundary; style=style, samples=samples, plot_kws...)
+    p = plot!(ax, cs, boundary; style=style, samples=samples, inverted=inverted,
+              plot_kws...)
 
     return FigureAxisPlot(f, ax, p)
 end
@@ -42,8 +44,12 @@ function plot!(
     ; # keyword arguments
     style::Symbol=:merged,
     samples::Union{NTuple{3, Int}, Int}=50,
+    inverted::Bool=false,
     plot_kws...,
 )
+    inverted && style == :individual &&
+        error("`inverted=true` is incompatible with `style=:individual`")
+
     Rs = if boundary isa DirectBasis{3}
         boundary
     elseif boundary isa AbstractVector{<:AbstractVector{<:Number}}
@@ -87,14 +93,16 @@ function plot!(
     p = if style == :individual
         local _p
         for c in cs
-            V = [signed_distance_if_inside(x, y, z, c, Rs) for x in xs, y in ys, z in zs]
+            V = [signed_distance_if_inside(x, y, z, c, Rs; inverted)
+                 for x in xs, y in ys, z in zs]
             vs, fs_idxs = isosurface(V, xs, ys, zs)
             fs_idxs = map(i -> GeometryBasics.TriangleFace(i[1], i[2], i[3]), fs_idxs)
             _p = mesh!(cartesianize.(SVector.(vs), Ref(Rs)), fs_idxs; plot_opts...)
         end
         _p
     elseif style == :merged
-        V = [signed_distance_if_inside(x, y, z, cs, Rs) for x in xs, y in ys, z in zs]
+        V = [signed_distance_if_inside(x, y, z, cs, Rs; inverted)
+             for x in xs, y in ys, z in zs]
         vs, _fs_idxs = isosurface(V, xs, ys, zs)
         fs_idxs = map(i -> GeometryBasics.TriangleFace(i[1], i[2], i[3]), _fs_idxs)
         mesh!(cartesianize.(SVector.(vs), Ref(Rs)), fs_idxs; plot_opts...)
@@ -115,13 +123,15 @@ end
 function signed_distance_if_inside(
     x::Real, y::Real, z::Real, 
     c::Union{Primitive, AbstractVector{<:Primitive}},
-    Rs::DirectBasis{3}
+    Rs::DirectBasis{3};
+    inverted::Bool=false
 )
     # NB: we assume `x`, `y`, and `z` to be given in _lattice_ coordinates here, unlike
     #     in the `uc::Cell{3}` method variant below
-    inside_box(x, y, z) || return 1e20 # outside box
+    inside_box(x, y, z) || return 1e20 # outside box: never part of the solid
     rc = cartesianize(SVector(x,y,z), Rs)
-    return signed_distance(rc, c) # inside box: return distance to primitive(s)
+    d = signed_distance(rc, c) # inside box: distance to primitive(s)
+    return inverted ? -d : d # if `inverted`, the solid is the box *minus* the primitives
 end
 
 # ---------------------------------------------------------------------------------------- #
@@ -134,8 +144,12 @@ function plot!(
     ; # keyword arguments
     style::Symbol=:merged,
     samples::Union{NTuple{3, Int}, Int}=50,
+    inverted::Bool=false,
     plot_kws...,
 )
+    inverted && style == :individual &&
+        error("`inverted=true` is incompatible with `style=:individual`")
+
     if setting(uc) == Brillouin.LATTICE
         uc = cartesianize(uc) # always only work with cartesian unit cells
     end
@@ -163,14 +177,16 @@ function plot!(
     p = if style == :individual
         local _p
         for c in cs
-            V = [signed_distance_if_inside(x, y, z, c, uc) for x in xs, y in ys, z in zs]
+            V = [signed_distance_if_inside(x, y, z, c, uc; inverted)
+                 for x in xs, y in ys, z in zs]
             vs, fs_idxs = isosurface(V, xs, ys, zs)
             fs_idxs = map(i -> GeometryBasics.TriangleFace(i[1], i[2], i[3]), fs_idxs)
             _p = mesh!(vs, fs_idxs; plot_opts...)
         end
         _p
     elseif style == :merged
-        V = [signed_distance_if_inside(x, y, z, cs, uc) for x in xs, y in ys, z in zs]
+        V = [signed_distance_if_inside(x, y, z, cs, uc; inverted)
+             for x in xs, y in ys, z in zs]
         vs, _fs_idxs = isosurface(V, xs, ys, zs)
         fs_idxs = map(i -> GeometryBasics.TriangleFace(i[1], i[2], i[3]), _fs_idxs)
         mesh!(vs, fs_idxs; plot_opts...)
@@ -184,13 +200,15 @@ end
 function signed_distance_if_inside(
     x::Real, y::Real, z::Real, 
     c::Union{Primitive, AbstractVector{<:Primitive}},
-    uc::Cell{3}
+    uc::Cell{3};
+    inverted::Bool=false
 )
     # NB: we assume `x`, `y`, and `z` to be given in _cartesian_ coordinates here, unlike
     #     in the `Rs::DirectBasis{3}` method-variant above
     rᶜ = SVector(x, y, z)
-    in_wignerseitz(rᶜ, uc) || return 1e20 # outside wigner-seitz cell
-    return signed_distance(rᶜ, c) # inside wigner-seitz cell: return distance to primitive(s)
+    in_wignerseitz(rᶜ, uc) || return 1e20 # outside the cell: never part of the solid
+    d = signed_distance(rᶜ, c) # inside wigner-seitz cell: distance to primitive(s)
+    return inverted ? -d : d # if `inverted`, the solid is the cell *minus* the primitives
 end
 
 function unitcell_bounding_box(uc::Cell{3})
