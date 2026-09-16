@@ -1,3 +1,5 @@
-/Manifest.toml
-examples/Manifest.toml
+Manifest.toml
 .vscode/*
+examples/Manifest.toml
+/examples/.vscode/*
+/examples/.CondaPkg/*
