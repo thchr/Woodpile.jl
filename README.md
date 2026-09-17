@@ -1,5 +1,7 @@
 # Woodpile.jl
 
+[![Build status][ci-status-img]][ci-status-url] [![Coverage][coverage-img]][coverage-url]
+
 Julia package to generate arbitrary woodpile-like structures with space group symmetry.
 
 The functionality is provided via `symmetrize` (see `help> symmetrize`), which "symmetrizes" (i.e., adds symmetrically related) `Cylinder` and `Sphere` objects over a set of symmetry operations, retaining those that are inequivalent and inside the unit cell.
@@ -144,3 +146,8 @@ The docstring of `symmetrize` is copied below:
 > 
 > julia> plot!(pcs′, pRs; inverted=true, transparency=false) # primitive cell
 > ```
+
+[ci-status-img]: https://github.com/thchr/Woodpile.jl/workflows/CI/badge.svg
+[ci-status-url]: https://github.com/thchr/Woodpile.jl/actions
+[coverage-img]:  https://codecov.io/gh/thchr/Woodpile.jl/branch/master/graph/badge.svg
+[coverage-url]:  https://codecov.io/gh/thchr/Woodpile.jl/tree/master
